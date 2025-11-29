@@ -1,8 +1,10 @@
-target/
-lq.rvalue
-out.der
-result.xml
-.classpath
-.project
-.settings/
+# Java build output
+/target/
 
+# .NET build output
+bin/
+obj/
+
+# IDE
+.vs/
+*.user
