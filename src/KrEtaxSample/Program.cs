@@ -14,8 +14,13 @@ public static class Program
     {
         if (args.Length == 0)
         {
-            PrintUsage();
-            return 1;
+            var interactiveArgs = PromptInteractiveArgs();
+            if (interactiveArgs is null)
+            {
+                return 1;
+            }
+
+            args = interactiveArgs;
         }
 
         var command = args[0].ToLowerInvariant();
@@ -86,6 +91,149 @@ public static class Program
             Console.Error.WriteLine(ex);
             return 1;
         }
+    }
+
+    private static string[]? PromptInteractiveArgs()
+    {
+        Console.WriteLine("Interactive mode: choose a command to run.");
+        PrintUsage();
+
+        Console.Write("Command: ");
+        var command = ReadRequired();
+        if (command is null)
+        {
+            return null;
+        }
+
+        switch (command.ToLowerInvariant())
+        {
+            case "load-pkcs12":
+                var p12Path = ReadRequired("Path to PKCS#12 file: ");
+                var p12Password = ReadRequired("Password: ");
+                if (p12Path is null || p12Password is null)
+                {
+                    return null;
+                }
+
+                return new[]
+                {
+                    command,
+                    p12Path,
+                    p12Password,
+                };
+
+            case "sign-xml":
+                var signXmlP12Path = ReadRequired("Path to PKCS#12 file: ");
+                var signXmlPassword = ReadRequired("Password: ");
+                var unsignedXml = ReadRequired("Unsigned XML path: ");
+                var signedXmlOutput = ReadRequired("Signed XML output path: ");
+                if (signXmlP12Path is null || signXmlPassword is null || unsignedXml is null || signedXmlOutput is null)
+                {
+                    return null;
+                }
+
+                return new[]
+                {
+                    command,
+                    signXmlP12Path,
+                    signXmlPassword,
+                    unsignedXml,
+                    signedXmlOutput,
+                };
+
+            case "save-rvalue":
+                var saveRvalueP12Path = ReadRequired("Path to PKCS#12 file: ");
+                var saveRvaluePassword = ReadRequired("Password: ");
+                var rvalueOutput = ReadRequired("Output R-value path: ");
+                if (saveRvalueP12Path is null || saveRvaluePassword is null || rvalueOutput is null)
+                {
+                    return null;
+                }
+
+                return new[]
+                {
+                    command,
+                    saveRvalueP12Path,
+                    saveRvaluePassword,
+                    rvalueOutput,
+                };
+
+            case "package-tax-invoice":
+                var rvaluePath = ReadRequired("R-value path: ");
+                var signedXmlPath = ReadRequired("Signed XML path: ");
+                var derOutput = ReadRequired("DER output path: ");
+                if (rvaluePath is null || signedXmlPath is null || derOutput is null)
+                {
+                    return null;
+                }
+
+                return new[]
+                {
+                    command,
+                    rvaluePath,
+                    signedXmlPath,
+                    derOutput,
+                };
+
+            case "encrypt-cms":
+                var encryptRvalue = ReadRequired("R-value path: ");
+                var encryptXml = ReadRequired("XML path: ");
+                var encryptOutput = ReadRequired("Encrypted output path: ");
+                var recipientCert = ReadRequired("Recipient certificate path: ");
+                if (encryptRvalue is null || encryptXml is null || encryptOutput is null || recipientCert is null)
+                {
+                    return null;
+                }
+
+                return new[]
+                {
+                    command,
+                    encryptRvalue,
+                    encryptXml,
+                    encryptOutput,
+                    recipientCert,
+                };
+
+            case "submit-with-soap":
+                var submitP12 = ReadRequired("Path to PKCS#12 file: ");
+                var submitPassword = ReadRequired("Password: ");
+                var cmsEncryptedFile = ReadRequired("CMS encrypted file path: ");
+                var endpoint = ReadRequired("Endpoint URL: ");
+                if (submitP12 is null || submitPassword is null || cmsEncryptedFile is null || endpoint is null)
+                {
+                    return null;
+                }
+
+                return new[]
+                {
+                    command,
+                    submitP12,
+                    submitPassword,
+                    cmsEncryptedFile,
+                    endpoint,
+                };
+
+            default:
+                Console.Error.WriteLine("Unknown command.");
+                return null;
+        }
+    }
+
+    private static string? ReadRequired(string prompt = "")
+    {
+        if (!string.IsNullOrEmpty(prompt))
+        {
+            Console.Write(prompt);
+        }
+
+        var value = Console.ReadLine();
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            Console.Error.WriteLine("A value is required.");
+            return null;
+        }
+
+        return value;
     }
 
     private static void PrintUsage()
